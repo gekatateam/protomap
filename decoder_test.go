@@ -79,5 +79,9 @@ func setExpectedKeysWithTypes(in map[string]any) (map[string]any, error) {
 	}
 	in["Inner"].(map[string]any)["List"] = intsList
 
+	for k, v := range in["IntMap"].(map[string]any) {
+		in["IntMap"].(map[string]any)[k] = int64(v.(float64))
+	}
+
 	return in, nil
 }

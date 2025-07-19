@@ -12,5 +12,8 @@
     "Inner": {
         "Foo": "fizzBuzz",
         "List": [ 0, 1, -1 ]
+    },
+    "IntMap": {
+        "13": 37
     }
 }
