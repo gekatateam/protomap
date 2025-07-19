@@ -1,0 +1,16 @@
+{
+    "String": "test.key",
+    "Map": {
+        "foo": "foo",
+        "bar": "bar"
+    },
+    "Binary": "dGhpcyBpcyBhIHRlc3QgZGF0YQ==",
+    "List": ["tag one", "tag two"],
+    "Int": -1337,
+    "Uint": 420,
+    "Float": 13.37,
+    "Inner": {
+        "Foo": "fizzBuzz",
+        "List": [ 0, 1, -1 ]
+    }
+}
