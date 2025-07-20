@@ -218,10 +218,23 @@ func GoValueToProto(desc protoreflect.FieldDescriptor, kind protoreflect.Kind, v
 		}
 		return protoreflect.ValueOfBytes(v), nil
 	case protoreflect.EnumKind:
+		if v, ok := value.(string); ok {
+			enum := desc.Enum().Values().ByName(protoreflect.Name(v))
+			if enum == nil {
+				return protoreflect.Value{}, fmt.Errorf("cannot found enum value by string %v", v)
+			}
+			return protoreflect.ValueOfEnum(enum.Number()), nil
+		}
+
 		v, err := AnyToInteger(value)
 		if err != nil {
 			return protoreflect.Value{}, err
 		}
+
+		if desc.Enum().Values().ByNumber(protoreflect.EnumNumber(int32(v))) == nil {
+			return protoreflect.Value{}, fmt.Errorf("cannot found enum value by number %v", v)
+		}
+
 		return protoreflect.ValueOfEnum(protoreflect.EnumNumber(int32(v))), nil
 	case protoreflect.MessageKind, protoreflect.GroupKind:
 		v, ok := value.(map[string]any)
