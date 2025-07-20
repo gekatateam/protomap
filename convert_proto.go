@@ -50,6 +50,7 @@ func MessageToMap(message protoreflect.Message) (map[string]any, error) {
 					failedKey = mk.String()
 					return false
 				}
+
 				gomap[mk.String()] = value
 				return true
 			})

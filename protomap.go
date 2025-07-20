@@ -2,9 +2,15 @@ package protomap
 
 import (
 	"context"
+	"errors"
 
 	"github.com/bufbuild/protocompile"
 	"github.com/bufbuild/protocompile/linker"
+)
+
+var (
+	ErrNoSuchFile    = errors.New("no such file")
+	ErrNoSuchMessage = errors.New("no such message in descriptor")
 )
 
 type Mapper struct {
