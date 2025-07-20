@@ -7,7 +7,7 @@ Like json `Unmarshal`/`Marshal` to/from generic map, but for protobuf.
 
 ## Why?
 
-To operate protobuf-encoded messages without updating generated code each time when your service need to work with updated/new `.proto`.
+To operate protobuf-encoded messages without updating generated code each time when your service need to work with tons of updated/new `.proto`.
 
 
 ## How?
