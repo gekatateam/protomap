@@ -36,7 +36,7 @@ func TestEncoder_EncodeToBinaryThenDecode(t *testing.T) {
 		t.Fatalf("map input preparation failed: %v", err)
 	}
 
-	result, err := mapper.Encode(input, testProto, testMessage)
+	result, err := mapper.Encode(input, testMessage)
 	if err != nil {
 		t.Fatalf("map input encoding failed: %v", err)
 	}
@@ -62,7 +62,7 @@ func TestEncoder_EncodeToBinaryThenDecode(t *testing.T) {
 		t.Fatalf("expected data preparation failed: %v", err)
 	}
 
-	decoderesult, err := mapper.Decode(binary, testProto, testMessage)
+	decoderesult, err := mapper.Decode(binary, testMessage)
 	if err != nil {
 		t.Fatalf("binary data decoding failed: %v", err)
 	}

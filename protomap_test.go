@@ -9,7 +9,7 @@ const (
 	testProto   = "./testdata/payload.proto"
 	testBinary  = "./testdata/payload.binpb"
 	testJson    = "./testdata/payload.json"
-	testMessage = "Test"
+	testMessage = "protomap.test.Test"
 
 	resultBinary = "./testdata/encoded.binpb"
 )

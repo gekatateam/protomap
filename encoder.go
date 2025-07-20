@@ -6,23 +6,17 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 )
 
-func (e *Mapper) Encode(data map[string]any, filepath, messageName string) ([]byte, error) {
-	f := e.files.FindFileByPath(filepath)
-	if f == nil {
-		return nil, ErrNoSuchFile
+func (e *Mapper) Encode(data map[string]any, messageName string) ([]byte, error) {
+	desc, err := e.r.FindMessageByName(protoreflect.FullName(messageName))
+	if err != nil {
+		return nil, err
 	}
 
-	msgs := f.Messages()
-	if msgs == nil {
-		return nil, ErrNoMessages
-	}
-
-	desc := msgs.ByName(protoreflect.Name(messageName))
 	if desc == nil {
 		return nil, ErrNoSuchMessage
 	}
 
-	message := dynamicpb.NewMessage(desc)
+	message := dynamicpb.NewMessage(desc.Descriptor())
 	if err := MapToMessage(data, message); err != nil {
 		return nil, err
 	}

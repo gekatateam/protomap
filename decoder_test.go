@@ -36,7 +36,7 @@ func TestDecoder_DecodeToJson(t *testing.T) {
 		t.Fatalf("expected data preparation failed: %v", err)
 	}
 
-	result, err := mapper.Decode(binary, testProto, testMessage)
+	result, err := mapper.Decode(binary, testMessage)
 	if err != nil {
 		t.Fatalf("binary data decoding failed: %v", err)
 	}

@@ -8,7 +8,7 @@ import (
 )
 
 type Mapper struct {
-	files linker.Files
+	r linker.Resolver
 }
 
 func NewMapper(compiler *protocompile.Compiler, files ...string) (*Mapper, error) {
@@ -23,5 +23,5 @@ func NewMapper(compiler *protocompile.Compiler, files ...string) (*Mapper, error
 		return nil, err
 	}
 
-	return &Mapper{files: f}, nil
+	return &Mapper{r: f.AsResolver()}, nil
 }
