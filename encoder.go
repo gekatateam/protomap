@@ -6,8 +6,8 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 )
 
-func (d *Mapper) Decode(data []byte, filepath, messageName string) (map[string]any, error) {
-	f := d.files.FindFileByPath(filepath)
+func (e *Mapper) Encode(data map[string]any, filepath, messageName string) ([]byte, error) {
+	f := e.files.FindFileByPath(filepath)
 	if f == nil {
 		return nil, ErrNoSuchFile
 	}
@@ -23,9 +23,9 @@ func (d *Mapper) Decode(data []byte, filepath, messageName string) (map[string]a
 	}
 
 	message := dynamicpb.NewMessage(desc)
-	if err := proto.Unmarshal(data, message); err != nil {
+	if err := MapToMessage(data, message); err != nil {
 		return nil, err
 	}
 
-	return MessageToMap(message)
+	return proto.Marshal(message)
 }
