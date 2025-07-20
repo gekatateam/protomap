@@ -16,9 +16,15 @@ message Test {
         string Type = 10;
         double Number = 11;
     }
+    Enum Enum = 12;
 }
 
 message Inner {
     string Foo = 1;
     repeated int64 List = 2;
+}
+
+enum Enum {
+    OK = 0;
+    FAILED = 1;
 }

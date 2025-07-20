@@ -25,7 +25,7 @@ func MessageToMap(message protoreflect.Message) (map[string]any, error) {
 			list := message.Get(field).List()
 			slice := make([]any, 0, list.Len())
 			for j := 0; j < list.Len(); j++ {
-				value, err := ProtoToGoValue(field.Kind(), list.Get(j))
+				value, err := ProtoToGoValue(field, field.Kind(), list.Get(j))
 				if err != nil {
 					return nil, fmt.Errorf("%v.%v: %w", string(field.Name()), j, err)
 				}
@@ -44,7 +44,7 @@ func MessageToMap(message protoreflect.Message) (map[string]any, error) {
 			var err error
 			var failedKey string
 			pmap.Range(func(mk protoreflect.MapKey, v protoreflect.Value) bool {
-				value, convertErr := ProtoToGoValue(mapvaluekind, v)
+				value, convertErr := ProtoToGoValue(field, mapvaluekind, v)
 				if convertErr != nil {
 					err = convertErr
 					failedKey = mk.String()
@@ -63,7 +63,7 @@ func MessageToMap(message protoreflect.Message) (map[string]any, error) {
 			continue
 		}
 
-		value, err := ProtoToGoValue(field.Kind(), message.Get(field))
+		value, err := ProtoToGoValue(field, field.Kind(), message.Get(field))
 		if err != nil {
 			return nil, fmt.Errorf("%v: %w", string(field.Name()), err)
 		}
@@ -73,7 +73,7 @@ func MessageToMap(message protoreflect.Message) (map[string]any, error) {
 	return result, nil
 }
 
-func ProtoToGoValue(kind protoreflect.Kind, value protoreflect.Value) (any, error) {
+func ProtoToGoValue(desc protoreflect.FieldDescriptor, kind protoreflect.Kind, value protoreflect.Value) (any, error) {
 	switch kind {
 	case protoreflect.BoolKind:
 		return value.Bool(), nil
@@ -90,7 +90,7 @@ func ProtoToGoValue(kind protoreflect.Kind, value protoreflect.Value) (any, erro
 	case protoreflect.BytesKind:
 		return value.Bytes(), nil
 	case protoreflect.EnumKind:
-		return value.Enum(), nil
+		return string(desc.Enum().Values().ByNumber(value.Enum()).Name()), nil
 	case protoreflect.MessageKind, protoreflect.GroupKind:
 		return MessageToMap(value.Message())
 	default:
