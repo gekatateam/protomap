@@ -15,6 +15,12 @@ func MessageToMap(message protoreflect.Message) (map[string]any, error) {
 	for i := 0; i < fields.Len(); i++ {
 		field := fields.Get(i)
 
+		if oneOf := field.ContainingOneof(); oneOf != nil {
+			if message.WhichOneof(oneOf).Index() != i {
+				continue
+			}
+		}
+
 		if field.IsList() {
 			list := message.Get(field).List()
 			slice := make([]any, 0, list.Len())

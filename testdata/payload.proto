@@ -12,6 +12,10 @@ message Test {
     double Float = 7;
     Inner Inner = 8;
     map<int32, int32> IntMap = 9;
+    oneof OneOf {
+        string Type = 10;
+        double Number = 11;
+    }
 }
 
 message Inner {
