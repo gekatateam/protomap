@@ -41,8 +41,8 @@ func TestEncoder_EncodeToBinaryThenDecode(t *testing.T) {
 		t.Fatalf("map input encoding failed: %v", err)
 	}
 
-	// need to find better way to validate result
-	// we did this because fields order are random
+	// we did this because fields order are not determined
+	// if !reflect.DeepEqual(binary, result) {
 	if len(binary) != len(result) {
 		t.Log("------ expected -----")
 		t.Logf("%v", binary)

@@ -112,7 +112,7 @@ func MapToMessage(data map[string]any, message protoreflect.Message) error {
 			}
 
 			elemkind := field.Kind()
-			protolist := message.NewField(field).List()
+			protolist := message.Mutable(field).List()
 			for i, v := range slice {
 				protovalue, err := GoValueToProto(field, elemkind, v)
 				if err != nil {
@@ -120,7 +120,6 @@ func MapToMessage(data map[string]any, message protoreflect.Message) error {
 				}
 				protolist.Append(protovalue)
 			}
-			message.Set(field, protoreflect.ValueOfList(protolist))
 			continue
 		}
 
@@ -132,7 +131,7 @@ func MapToMessage(data map[string]any, message protoreflect.Message) error {
 
 			keykind := field.MapKey().Kind()
 			valkind := field.MapValue().Kind()
-			protomap := message.NewField(field).Map()
+			protomap := message.Mutable(field).Map()
 			for k, v := range gomap {
 				protokey, err := GoValueToProto(field, keykind, k)
 				if err != nil {
@@ -146,7 +145,6 @@ func MapToMessage(data map[string]any, message protoreflect.Message) error {
 
 				protomap.Set(protokey.MapKey(), protovalue)
 			}
-			message.Set(field, protoreflect.ValueOfMap(protomap))
 			continue
 		}
 
@@ -231,11 +229,11 @@ func GoValueToProto(desc protoreflect.FieldDescriptor, kind protoreflect.Kind, v
 			return protoreflect.Value{}, err
 		}
 
-		if desc.Enum().Values().ByNumber(protoreflect.EnumNumber(int32(v))) == nil {
+		if desc.Enum().Values().ByNumber(protoreflect.EnumNumber(v)) == nil {
 			return protoreflect.Value{}, fmt.Errorf("cannot found enum value by number %v", v)
 		}
 
-		return protoreflect.ValueOfEnum(protoreflect.EnumNumber(int32(v))), nil
+		return protoreflect.ValueOfEnum(protoreflect.EnumNumber(v)), nil
 	case protoreflect.MessageKind, protoreflect.GroupKind:
 		v, ok := value.(map[string]any)
 		if !ok {
