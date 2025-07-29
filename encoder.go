@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 )
 
-func (e *Mapper) Encode(data map[string]any, messageName string) ([]byte, error) {
+func (e *Mapper) Encode(data any, messageName string) ([]byte, error) {
 	desc, err := e.r.FindMessageByName(protoreflect.FullName(messageName))
 	if err != nil {
 		return nil, err
@@ -17,7 +17,7 @@ func (e *Mapper) Encode(data map[string]any, messageName string) ([]byte, error)
 	}
 
 	message := dynamicpb.NewMessage(desc.Descriptor())
-	if err := MapToMessage(data, message); err != nil {
+	if err := AnyToMessage(data, message); err != nil {
 		return nil, err
 	}
 

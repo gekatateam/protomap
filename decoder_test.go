@@ -47,7 +47,7 @@ func TestDecoder_DecodeToJson(t *testing.T) {
 			t.Logf("%v %v %T", k, v, v)
 		}
 		t.Log("------ result -----")
-		for k, v := range result {
+		for k, v := range result.(map[string]any) {
 			t.Logf("%v %v %T", k, v, v)
 		}
 		t.Fatal("expected and result are not equal")
