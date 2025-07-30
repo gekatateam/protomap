@@ -59,5 +59,6 @@ binaryData, err := mapper.Encode(gomap, messageName, interceptors.DurationEncode
 if err != nil {
     panic(err)
 }
+```
 
 A few ready functions you can find in [interceptors](interceptors/) dir.
