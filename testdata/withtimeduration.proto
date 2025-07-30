@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package protomap.test;
+
+import "google/protobuf/timestamp.proto";
+import "google/protobuf/duration.proto";
+
+message WithTimeDuration {
+    google.protobuf.Timestamp Ts = 1;
+    google.protobuf.Duration Dur = 2;
+}
