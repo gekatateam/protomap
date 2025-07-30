@@ -17,7 +17,12 @@ To operate protobuf-encoded messages without updating generated code each time w
 ### Create `Mapper`
 ```go
 protofiles := []string{/* list of .proto files, which contains messages encode/decode to */}
-compiler := /* https://pkg.go.dev/github.com/bufbuild/protocompile#Compiler that will be used to compile .proto files; may be nil */
+
+/* https://pkg.go.dev/github.com/bufbuild/protocompile#Compiler that will be used to compile .proto files; may be nil */
+compiler := protocompile.Compiler{
+    Resolver: protocompile.WithStandardImports(&protocompile.SourceResolver{}),
+}
+
 mapper, err := protomap.NewMapper(compiler, protofiles...)
 if err != nil {
     panic(err)
@@ -26,8 +31,9 @@ if err != nil {
 
 ### Decode your message from bytes slice to map
 ```go
-messageName := /* full name of the message to decode */
-gomap, err := mapper.Decode(binaryData, messageName)
+/* full name of the message to decode */
+messageName := "protomap.test.WithTimeDuration" 
+result, err := mapper.Decode(binaryData, messageName)
 if err != nil {
     panic(err)
 }
@@ -35,9 +41,23 @@ if err != nil {
 
 ### Encode your map to bytes slice
 ```go
-messageName := /* full name of the message to encode */
+/* full name of the message to encode */
+messageName := "protomap.test.WithTimeDuration"
 binaryData, err := mapper.Encode(gomap, messageName)
 if err != nil {
     panic(err)
 }
 ```
+
+## Interceptors
+Interceptors is a functions that allows you to encode/decode custom messages to Go types, for example, `time.Time` <-> `google.protobuf.Timestamp`. 
+
+You need to pass interceptor(s) to `Encode`/`Decode` mapper methods to apply it:
+```go
+messageName := "protomap.test.WithTimeDuration"
+binaryData, err := mapper.Encode(gomap, messageName, interceptors.DurationEncoder, interceptors.TimeEncoder)
+if err != nil {
+    panic(err)
+}
+
+A few ready functions you can find in [interceptors](interceptors/) dir.
