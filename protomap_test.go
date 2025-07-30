@@ -11,7 +11,10 @@ const (
 	testJson    = "./testdata/payload.json"
 	testMessage = "protomap.test.Test"
 
-	resultBinary = "./testdata/encoded.binpb"
+	testIntersProto   = "./testdata/withtimeduration.proto"
+	testIntersBinary  = "./testdata/withtimeduration.binpb"
+	testIntersJson    = "./testdata/withtimeduration.json"
+	testIntersMessage = "protomap.test.WithTimeDuration"
 )
 
 func setExpectedKeysWithTypes(in map[string]any) (map[string]any, error) {

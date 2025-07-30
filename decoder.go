@@ -6,7 +6,7 @@ import (
 	"google.golang.org/protobuf/types/dynamicpb"
 )
 
-func (d *Mapper) Decode(data []byte, messageName string) (map[string]any, error) {
+func (d *Mapper) Decode(data []byte, messageName string, inters ...DecodeInterceptor) (any, error) {
 	desc, err := d.r.FindMessageByName(protoreflect.FullName(messageName))
 	if err != nil {
 		return nil, err
@@ -21,5 +21,5 @@ func (d *Mapper) Decode(data []byte, messageName string) (map[string]any, error)
 		return nil, err
 	}
 
-	return MessageToMap(message)
+	return MessageToAny(message, inters...)
 }

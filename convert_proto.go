@@ -1,14 +1,26 @@
 package protomap
 
 import (
-	"errors"
 	"fmt"
 
 	"google.golang.org/protobuf/reflect/protoreflect"
 	"google.golang.org/protobuf/types/dynamicpb"
 )
 
-func MessageToMap(message protoreflect.Message) (map[string]any, error) {
+type DecodeInterceptor func(message protoreflect.Message) (result any, applied bool, err error)
+
+func MessageToAny(message protoreflect.Message, inters ...DecodeInterceptor) (any, error) {
+	for _, i := range inters {
+		val, applied, err := i(message)
+		if err != nil {
+			return nil, err
+		}
+
+		if applied {
+			return val, nil
+		}
+	}
+
 	fields := message.Descriptor().Fields()
 	result := make(map[string]any, fields.Len())
 
@@ -25,7 +37,7 @@ func MessageToMap(message protoreflect.Message) (map[string]any, error) {
 			list := message.Get(field).List()
 			slice := make([]any, 0, list.Len())
 			for j := 0; j < list.Len(); j++ {
-				value, err := ProtoToGoValue(field, field.Kind(), list.Get(j))
+				value, err := ProtoToGoValue(field, field.Kind(), list.Get(j), inters...)
 				if err != nil {
 					return nil, fmt.Errorf("%v.%v: %w", string(field.Name()), j, err)
 				}
@@ -44,7 +56,7 @@ func MessageToMap(message protoreflect.Message) (map[string]any, error) {
 			var err error
 			var failedKey string
 			pmap.Range(func(mk protoreflect.MapKey, v protoreflect.Value) bool {
-				value, convertErr := ProtoToGoValue(field, mapvaluekind, v)
+				value, convertErr := ProtoToGoValue(field, mapvaluekind, v, inters...)
 				if convertErr != nil {
 					err = convertErr
 					failedKey = mk.String()
@@ -63,7 +75,7 @@ func MessageToMap(message protoreflect.Message) (map[string]any, error) {
 			continue
 		}
 
-		value, err := ProtoToGoValue(field, field.Kind(), message.Get(field))
+		value, err := ProtoToGoValue(field, field.Kind(), message.Get(field), inters...)
 		if err != nil {
 			return nil, fmt.Errorf("%v: %w", string(field.Name()), err)
 		}
@@ -73,7 +85,7 @@ func MessageToMap(message protoreflect.Message) (map[string]any, error) {
 	return result, nil
 }
 
-func ProtoToGoValue(desc protoreflect.FieldDescriptor, kind protoreflect.Kind, value protoreflect.Value) (any, error) {
+func ProtoToGoValue(desc protoreflect.FieldDescriptor, kind protoreflect.Kind, value protoreflect.Value, inters ...DecodeInterceptor) (any, error) {
 	switch kind {
 	case protoreflect.BoolKind:
 		return value.Bool(), nil
@@ -92,13 +104,31 @@ func ProtoToGoValue(desc protoreflect.FieldDescriptor, kind protoreflect.Kind, v
 	case protoreflect.EnumKind:
 		return string(desc.Enum().Values().ByNumber(value.Enum()).Name()), nil
 	case protoreflect.MessageKind, protoreflect.GroupKind:
-		return MessageToMap(value.Message())
+		return MessageToAny(value.Message(), inters...)
 	default:
 		return nil, fmt.Errorf("unsupported field type: %s", kind)
 	}
 }
 
-func MapToMessage(data map[string]any, message protoreflect.Message) error {
+type EncodeInterceptor func(input any, message protoreflect.Message) (applied bool, err error)
+
+func AnyToMessage(input any, message protoreflect.Message, inters ...EncodeInterceptor) error {
+	for _, i := range inters {
+		applied, err := i(input, message)
+		if err != nil {
+			return err
+		}
+
+		if applied {
+			return nil
+		}
+	}
+
+	data, ok := input.(map[string]any)
+	if !ok {
+		return fmt.Errorf("expected map[string]any, got %T", input)
+	}
+
 	fields := message.Descriptor().Fields()
 
 	for i := 0; i < fields.Len(); i++ {
@@ -121,7 +151,7 @@ func MapToMessage(data map[string]any, message protoreflect.Message) error {
 			elemkind := field.Kind()
 			protolist := message.Mutable(field).List()
 			for i, v := range slice {
-				protovalue, err := GoValueToProto(field, elemkind, v)
+				protovalue, err := GoValueToProto(field, elemkind, v, inters...)
 				if err != nil {
 					return fmt.Errorf("%v.%v: %w", field.Name(), i, err)
 				}
@@ -140,12 +170,12 @@ func MapToMessage(data map[string]any, message protoreflect.Message) error {
 			valkind := field.MapValue().Kind()
 			protomap := message.Mutable(field).Map()
 			for k, v := range gomap {
-				protokey, err := GoValueToProto(field, keykind, k)
+				protokey, err := GoValueToProto(field, keykind, k, inters...)
 				if err != nil {
 					return fmt.Errorf("%v.%v key: %w", field.Name(), k, err)
 				}
 
-				protovalue, err := GoValueToProto(field, valkind, v)
+				protovalue, err := GoValueToProto(field, valkind, v, inters...)
 				if err != nil {
 					return fmt.Errorf("%v.%v key: %w", field.Name(), k, err)
 				}
@@ -155,7 +185,7 @@ func MapToMessage(data map[string]any, message protoreflect.Message) error {
 			continue
 		}
 
-		protovalue, err := GoValueToProto(field, field.Kind(), value)
+		protovalue, err := GoValueToProto(field, field.Kind(), value, inters...)
 		if err != nil {
 			return fmt.Errorf("%v: %w", field.Name(), err)
 		}
@@ -166,7 +196,7 @@ func MapToMessage(data map[string]any, message protoreflect.Message) error {
 	return nil
 }
 
-func GoValueToProto(desc protoreflect.FieldDescriptor, kind protoreflect.Kind, value any) (protoreflect.Value, error) {
+func GoValueToProto(desc protoreflect.FieldDescriptor, kind protoreflect.Kind, value any, inters ...EncodeInterceptor) (protoreflect.Value, error) {
 	switch kind {
 	case protoreflect.StringKind:
 		v, err := AnyToString(value)
@@ -242,13 +272,8 @@ func GoValueToProto(desc protoreflect.FieldDescriptor, kind protoreflect.Kind, v
 
 		return protoreflect.ValueOfEnum(protoreflect.EnumNumber(v)), nil
 	case protoreflect.MessageKind, protoreflect.GroupKind:
-		v, ok := value.(map[string]any)
-		if !ok {
-			return protoreflect.Value{}, errors.New("field kind is message or gorup, but value not a map")
-		}
-
 		msg := dynamicpb.NewMessage(desc.Message())
-		if err := MapToMessage(v, msg); err != nil {
+		if err := AnyToMessage(value, msg, inters...); err != nil {
 			return protoreflect.Value{}, err
 		}
 		return protoreflect.ValueOfMessage(msg), nil
