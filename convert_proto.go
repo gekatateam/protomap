@@ -28,8 +28,10 @@ func MessageToAny(message protoreflect.Message, inters ...DecodeInterceptor) (an
 		field := fields.Get(i)
 
 		if oneOf := field.ContainingOneof(); oneOf != nil {
-			if message.WhichOneof(oneOf).Index() != i {
-				continue
+			if oneOfField := message.WhichOneof(oneOf); oneOfField != nil {
+				if oneOfField.Index() != i {
+					continue
+				}
 			}
 		}
 
